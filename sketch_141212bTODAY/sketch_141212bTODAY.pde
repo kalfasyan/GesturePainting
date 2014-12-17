@@ -40,8 +40,17 @@ PVector confidenceVector = new PVector();
 
 //*****************************************
 PVector leftHandPos = new PVector();
+PVector rightHandPos = new PVector();
 float distanceScalarLHand;
 float leftHandSize = 50;
+float rightHandSize = 50;
+PImage canvas;
+PGraphics b1;
+int b1x = 5;
+int b1y = 5;
+int bwidth = 50;
+int bheight = 50;
+PGraphics c;
 
 
 /*---------------------------------------------------------------
@@ -50,6 +59,9 @@ Draws window
 ----------------------------------------------------------------*/
 void setup()
 {
+  b1 = createGraphics(bwidth,bheight);
+  c = createGraphics(bwidth,bheight);
+  background(255);
   // start a new kinect object
   kinect = new SimpleOpenNI(this);
  
@@ -72,8 +84,9 @@ void setup()
 Updates Kinect. Gets users tracking and draws skeleton and
 head if confidence of tracking is above threshold
 ----------------------------------------------------------------*/
-void draw(){
-  //background(255);
+void draw(){ 
+  //******************
+  
   // update the camera
   kinect.update();
   // get Kinect data
@@ -81,13 +94,13 @@ void draw(){
   // draw depth image at coordinates (0,0)
   // INSTEAD OF KINETDEPTH TRY SOMETHING ELSE
   //image(kinectDepth,0,0);
- 
    // get all user IDs of tracked users
   userID = kinect.getUsers();
- 
+    
   // loop through each user to see if tracking
   for(int i=0;i<userID.length;i++)
   {
+    
     // if Kinect is tracking certain user then get joint vectors
     if(kinect.isTrackingSkeleton(userID[i]))
     {
@@ -96,6 +109,7 @@ void draw(){
                           SimpleOpenNI.SKEL_HEAD,confidenceVector);
  
       // if confidence of tracking is beyond threshold, then track user
+      paintCursor(userID[i]);
       if(confidence > confidenceLevel)
       {
         // change draw color based on hand id#
@@ -105,6 +119,12 @@ void draw(){
         // draw the rest of the body
         //drawSkeleton(userID[i]);
         // **************************
+        paintButtons();
+        
+        int buttonNumber = checkButton(userID[i]);
+        if (buttonNumber == 1){
+          fill(0);
+        }        
         paintStuff(userID[i]);
  
       } //if(confidence > confidenceLevel)
@@ -112,21 +132,75 @@ void draw(){
   } //for(int i=0;i<userID.length;i++)
 } // void draw()
 
-
+/*---------------------------------------------------------------
+Check if our left hand is over a button
+----------------------------------------------------------------*/
+int checkButton(int userId){
+  if (overButton(b1x,b1y,bwidth,bheight,userId)){
+    return 1;
+  } else {
+    return 0;
+  }
+}
+/*---------------------------------------------------------------
+OverButton
+----------------------------------------------------------------*/
+boolean overButton(int x, int y, int w, int h,int userId){
+  kinect.getJointPositionSkeleton(userId,SimpleOpenNI.SKEL_LEFT_HAND,leftHandPos);
+  kinect.convertRealWorldToProjective(leftHandPos,leftHandPos); 
+  float a = leftHandPos.x;
+  float b = leftHandPos.y;
+  
+  if ( a >= x && a<= x+w && b >= y && b <= y+h ){
+    return true;
+  } else {
+    return false;
+  }
+}
+ 
+ 
 /*---------------------------------------------------------------
 Painting
 ----------------------------------------------------------------*/
  void paintStuff(int userId){
    
    
-   kinect.getJointPositionSkeleton(userId,SimpleOpenNI.SKEL_LEFT_HAND,leftHandPos);
-   kinect.convertRealWorldToProjective(leftHandPos,leftHandPos); 
-    println(leftHandPos.x);
-    println(leftHandPos.y);
+   kinect.getJointPositionSkeleton(userId,SimpleOpenNI.SKEL_RIGHT_HAND,rightHandPos);
+   kinect.convertRealWorldToProjective(rightHandPos,rightHandPos); 
+   println(rightHandPos.x);
+   println(rightHandPos.y);
    
-    ellipse(leftHandPos.x,leftHandPos.y, 50,50);
-     
+   ellipse(rightHandPos.x,rightHandPos.y, 20,20);
+   
+   
 }
+/*---------------------------------------------------------------
+Paint Buttons
+---------------------------------------------------------------*/
+void paintButtons(){
+   b1.beginDraw();
+   b1.background(51);
+   b1.noFill();
+   b1.stroke(255);
+   b1.rect(0,0,bwidth,bheight);
+   b1.endDraw();
+   image(b1,b1x,b1y);   
+}
+/*---------------------------------------------------------------
+Paint Cursor
+---------------------------------------------------------------*/
+void paintCursor(int userId){
+  kinect.getJointPositionSkeleton(userId,SimpleOpenNI.SKEL_LEFT_HAND,leftHandPos);
+  kinect.convertRealWorldToProjective(leftHandPos,leftHandPos); 
+  c.beginDraw();
+  c.background(51);
+  c.rect(0,0,bwidth,bheight);
+  c.endDraw();
+  image(c,leftHandPos.x,leftHandPos.y);
+
+}
+
+
 /*---------------------------------------------------------------
 Draw the skeleton of a tracked user.  Input is userID
 ----------------------------------------------------------------*/
