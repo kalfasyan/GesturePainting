@@ -1,0 +1,23 @@
+DON'T FORGET TO PULL CHANGES BEFORE STARTING WRITING THE CODE
+THE PERSON WHO HAS THE KINECT DEVICE MAY RUN THE WHOLE CODE ONCE PER SOME DAYS :D
+
+For Milestone:
+* Implement left hand - push/hover button property
+OK * Don't change color only when cursor is hovering, once it touches the button it changes and stays that way.
+* Left hand cursor has to be drawn as a cursor, not painting
+OK * Menu on the left: 6-color palette - each color is picked on hover of the left hand.
+* Maybe implement the same thing for cursor input, for debugging reasons.
+
+Basic Tasks:
+* Start / Stop Drawing : !!! RECOGNIZE GESTURE OF LEFT HAND FOR THAT
+* Implement background : Show the camera input instead of a blank paper
+* Basic Menu on the left:
+	* Tool 1 - Brush stroke button(light, normal, bold)
+	* Tool 2 - Eraser button
+	* Tool 3 - Color Picker button(first choose between 6 colors)
+	* Tool 4 - What else?
+
+Additional Tasks: (Add what you want here, some cool stuff, everyone can pick one or more and implement it)
+* Transparency
+(* Add more people )
+
