@@ -1,8 +1,27 @@
 /*---------------------------------------------------------------
- Created by: Leonardo Merza
- Version: 1.0
- 
- This class will track skeletons of users and draw them
+TASKS //add every task to be done here
+
+For Milestone:
+OK Implement left hand - push/hover button property
+OK Don't change color only when cursor is hovering, once it touches the button it changes and stays that way.
+*  Left hand cursor has to be drawn as a cursor, not painting
+OK Menu on the left: 6-color palette - each color is picked on hover of the left hand.
+OK  Maybe implement the same thing for cursor input, for debugging reasons. --> PVector mouse added. 
+*  Try at least one gesture
+
+Basic Tasks:
+* Hover selection is a bit difficult, maybe add a gesture for selecting? (simulating a mouse click)
+* Start / Stop Drawing : !!! RECOGNIZE GESTURE OF LEFT HAND FOR THAT
+* Implement background : Show the camera input instead of a blank paper
+* Basic Menu on the left:
+  * Tool 1 - Brush stroke button(light, normal, bold)
+  * Tool 2 - Eraser button
+  * Tool 3 - Color Picker button(first choose between 6 colors)
+  * Tool 4 - What else?
+
+Additional Tasks: (Add what you want here, some cool stuff, everyone can pick one or more and implement it)
+* Transparency
+* Add tracking of more users
  ----------------------------------------------------------------*/
 
 /*---------------------------------------------------------------
@@ -43,21 +62,33 @@ PVector confidenceVector = new PVector();
 //*****************************************
 PVector leftHandPos = new PVector();
 PVector rightHandPos = new PVector();
+
+//Use this PVector inside draw function to simulate hand with mouse
+//PVector mouse = new PVector(mouseX, mouseY);
+
 float distanceScalarLHand;
 float leftHandSize = 50;
 float rightHandSize = 50;
 PImage canvas;
-//PGraphics b1;
+//All Buttons
 Button redB;
 Button greenB;
 Button blueB;
+Button yellowB;
+Button orangeB;
+Button purpleB;
+Button grayB;
 Button[] allButtons;
+//position of first button
 int b1x = 5;
 int b1y = 5;
+//button size
 int bwidth = 100;
-int bheight = 80;
+int bheight = 50;
+//brush size
 int brushW = 20;
 int brushH = 20;
+//cursor size
 int cursorW = 20;
 int cursorH = 20;
 
@@ -73,15 +104,20 @@ color white = color(255, 255, 255);
 color black = color(0, 0, 0);
 color transparent = color (255,0,0,0);
 
-int[] allColors = new color[] {black, white, red, green, blue, yellow, orange, purple, gray};  // color ids are respectively 0, 1, 2, ...., 8
+int[] allColors = new color[] {black, white, red, green, blue, yellow, orange, purple, gray, transparent};  // color ids are respectively 0, 1, 2, ...., 8
 
+// value for the fill/stroke color used by the brush. Change this value to change the brush fill/stroke color
 color currentFillColor;
 color currentStrokeColor; //not used for the moment
-color brushColor = green;
-color strokeColor = color(255, 0, 0, 0);
 
-PGraphics c;
+//color brushColor = green;
+//color strokeColor = color(255, 0, 0, 0);
+
+//PGraphics c;
+
+//Declare cursors
 Cursor brush, leftC;
+PGraphics layer1;
 
 /*---------------------------------------------------------------
  Starts new kinect object and enables skeleton tracking.
@@ -90,13 +126,13 @@ Cursor brush, leftC;
 void setup()
 {  
   //b1 = createGraphics(bwidth, bheight);
-  Button redB = new Button(5,5+bheight, bwidth, bheight, 2, red);
-  Button greenB = new Button(5, 5+2*bheight, bwidth, bheight, 3, green);
-  Button blueB = new Button(5, 5+3*bheight, bwidth, bheight, 4, blue);
-  Button yellowB = new Button(5, 5+4*bheight, bwidth, bheight, 5, yellow);
-  Button orangeB = new Button(5, 5+5*bheight, bwidth, bheight, 6, orange);
-  Button purpleB = new Button(5, 5+6*bheight, bwidth, bheight, 7, purple);
-  Button grayB = new Button(5, 5+7*bheight, bwidth, bheight, 8, gray);
+  Button redB = new Button(5,5, bwidth, bheight, 2, red);
+  Button greenB = new Button(5, 5+bheight, bwidth, bheight, 3, green);
+  Button blueB = new Button(5, 5+2*bheight, bwidth, bheight, 4, blue);
+  Button yellowB = new Button(5, 5+3*bheight, bwidth, bheight, 5, yellow);
+  Button orangeB = new Button(5, 5+4*bheight, bwidth, bheight, 6, orange);
+  Button purpleB = new Button(5, 5+5*bheight, bwidth, bheight, 7, purple);
+  Button grayB = new Button(5, 5+6*bheight, bwidth, bheight, 8, gray);
   allButtons = new Button[] {redB, greenB, blueB, yellowB, orangeB, purpleB, grayB}; 
   currentFillColor = red;
   currentStrokeColor = transparent;
@@ -106,12 +142,9 @@ void setup()
   brush = new Cursor(brushW, brushH);
   // create cursor for left hand
   leftC = new Cursor(cursorW, cursorH);
-  
-  
-  
-//  c = createGraphics(bwidth, bheight);
 
   background(255);
+  
   // start a new kinect object
   kinect = new SimpleOpenNI(this);
 
@@ -128,7 +161,8 @@ void setup()
 
   // create a window the size of the depth information
   size(kinect.depthWidth(), kinect.depthHeight());
-
+  layer1 = createGraphics(cursorW, cursorH);
+  
   
 } // void setup()
 
@@ -143,68 +177,65 @@ void draw() {
   kinect.update();
   // get Kinect data
   kinectDepth = kinect.depthImage();
+  
   // draw depth image at coordinates (0,0)
   // INSTEAD OF KINETDEPTH TRY SOMETHING ELSE
   //image(kinectDepth,0,0);
+  
   // get all user IDs of tracked users
   userID = kinect.getUsers();
+  
+  // paint buttons here (independent of user id's)
+  paintButtons(); 
 
   // loop through each user to see if tracking
+  // but if we care only for the first user then we shouldn't being doing that. 
+  // Or maybe care only for one user, not caring about his id (e.g. the first minute it's user1, then user2 pops in and takes control)
+  // In any case, this needs fixing --> BUG when detects 2nd user.  
   for (int i=0; i<userID.length; i++)
   {
-
+    
     // if Kinect is tracking certain user then get joint vectors
     if (kinect.isTrackingSkeleton(userID[i]))
-    {
+    {     
       
-
       // get confidence level that Kinect is tracking head
       confidence = kinect.getJointPositionSkeleton(userID[i], 
       SimpleOpenNI.SKEL_HEAD, confidenceVector);
 
-      // if confidence of tracking is beyond threshold, then track user
-      //paintCursor(userID[i]);
+      // if confidence of tracking is beyond threshold, then track user     
       if (confidence > confidenceLevel)
       {
-        // get left hand position
+        // get left hand position 
         kinect.getJointPositionSkeleton(userID[i], SimpleOpenNI.SKEL_LEFT_HAND, leftHandPos);
         kinect.convertRealWorldToProjective(leftHandPos, leftHandPos);
         // get right hand position
         kinect.getJointPositionSkeleton(userID[i], SimpleOpenNI.SKEL_RIGHT_HAND, rightHandPos);
         kinect.convertRealWorldToProjective(rightHandPos, rightHandPos);
-        // change draw color based on hand id#
-        // fill the ellipse with the same color
-        // no need to do that here but keep the command, we will use it later
-        //stroke(userColor[(i)]);
-        //noStroke();
-        // the 4th value is the transparency
-        //fill(255, 0, 0, 127);
-
+        
+       
         // draw the rest of the body
-        //drawSkeleton(userID[i]);
-        // ************************** 
+        // drawSkeleton(userID[i]);
+        
+        //Paint Cursors
         leftC.paintCursor(leftHandPos, white, black);
         brush.paintCursor(rightHandPos, currentFillColor, currentStrokeColor);
-        paintButtons();
-                
-//        redB.paintButton();
-//        blueB.paintButton();
-//        greenB.paintButton();
+        
 
         int buttonNumber = checkButton(leftHandPos);
         if (buttonNumber <= allColors.length) {          
           changeFillColor(buttonNumber);
         }        
-        //paintStuff(userID[i]);
+        
         
       } //if(confidence > confidenceLevel)
     } //if(kinect.isTrackingSkeleton(userID[i]))
   } //for(int i=0;i<userID.length;i++)
 } // void draw()
 
-/*------------------------------------------------------------------------------
- Checks if our left hand is over any button. Returns the id of the button, else 0
- -------------------------------------------------------------------------------*/
+/*---------------------------------------------------------------------------------------
+ Checks if pos in parameters is over any button. Returns the id of the button, else 1000
+ ---------------------------------------------------------------------------------------*/
 int checkButton(PVector pos) {
   for (int i=0; i<allButtons.length; i++) {
     if (allButtons[i].overButton(pos)) {
@@ -212,20 +243,11 @@ int checkButton(PVector pos) {
     }
   }
   return 1000;
-  
-//  if (overButton(b1x, b1y, bwidth, bheight, userId)) {
-//    return 1;
-//  } else {
-//    return 0;
-//  }
+
 }
 /*---------------------------------------------------------------
 Change functions. E.g. changeFillColor -> changes the color of the brush 
  ----------------------------------------------------------------*/
- 
-//void changeFillColor (color c) {
-//  currentFillColor = c;
-//}
 
 void changeFillColor (int colorID) {
   currentFillColor = allColors[colorID];
@@ -236,64 +258,15 @@ void changeStrokeColor(color c) {
 }
 
 
-/*---------------------------------------------------------------
- OverButton
- ----------------------------------------------------------------*/
-//boolean overButton(int x, int y, int w, int h, int userId) {
-//  kinect.getJointPositionSkeleton(userId, SimpleOpenNI.SKEL_LEFT_HAND, leftHandPos);
-//  kinect.convertRealWorldToProjective(leftHandPos, leftHandPos); 
-//  float a = leftHandPos.x;
-//  float b = leftHandPos.y;
-//
-//  if ( a >= x && a<= x+w && b >= y && b <= y+h ) {
-//    return true;
-//  } else {
-//    return false;
-//  }
-//}
 
-
-/*---------------------------------------------------------------
- Painting
- ----------------------------------------------------------------*/
-void paintStuff(int userId) {
-
-
-  kinect.getJointPositionSkeleton(userId, SimpleOpenNI.SKEL_RIGHT_HAND, rightHandPos);
-  kinect.convertRealWorldToProjective(rightHandPos, rightHandPos); 
-  println(rightHandPos.x);
-  println(rightHandPos.y);
-
-  ellipse(rightHandPos.x, rightHandPos.y, 20, 20);
-}
-/*---------------------------------------------------------------
- Paint Buttons
- ---------------------------------------------------------------*/
+/*-------------------------------------------------------------------------------------------
+ Paint Buttons: paints all buttons. The buttons must be elements of the array allButtons[]
+ ------------------------------------------------------------------------------------------*/
 void paintButtons() {
   for (int i=0; i<allButtons.length; i++) {
     allButtons[i].paintButton();
   }
-//  b1.beginDraw();
-//  b1.background(51);
-//  b1.noFill();
-//  b1.stroke(255);
-//  b1.rect(0, 0, bwidth, bheight);
-//  b1.endDraw();
-//  image(b1, b1x, b1y);
 }
-/*---------------------------------------------------------------
- Paint Cursor
- ---------------------------------------------------------------*/
-void paintCursor(int userId) {
-  kinect.getJointPositionSkeleton(userId, SimpleOpenNI.SKEL_LEFT_HAND, leftHandPos);
-  kinect.convertRealWorldToProjective(leftHandPos, leftHandPos); 
-  c.beginDraw();
-  c.background(51);
-  c.rect(0, 0, bwidth, bheight);
-  c.endDraw();
-  image(c, leftHandPos.x, leftHandPos.y);
-}
-
 
 /*---------------------------------------------------------------
  Draw the skeleton of a tracked user.  Input is userID
