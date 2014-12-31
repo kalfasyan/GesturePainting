@@ -69,7 +69,7 @@ PVector rightHandPos = new PVector();
 float distanceScalarLHand;
 float leftHandSize = 50;
 float rightHandSize = 50;
-PImage canvas;
+PGraphics canvas;
 //All Buttons
 Button redB;
 Button greenB;
@@ -78,6 +78,7 @@ Button yellowB;
 Button orangeB;
 Button purpleB;
 Button grayB;
+Button eraserB;
 Button[] allButtons;
 //position of first button
 int b1x = 5;
@@ -124,7 +125,15 @@ PGraphics layer1;
  Draws window
  ----------------------------------------------------------------*/
 void setup()
-{  
+{ 
+  //*************YANOS****************** 
+  size(800,800);
+  smooth();
+  canvas = createGraphics(width,height,JAVA2D);
+  canvas.beginDraw();
+  canvas.smooth();
+  //****************YANOS***************
+  
   //b1 = createGraphics(bwidth, bheight);
   Button redB = new Button(5,5, bwidth, bheight, 2, red);
   Button greenB = new Button(5, 5+bheight, bwidth, bheight, 3, green);
@@ -133,8 +142,9 @@ void setup()
   Button orangeB = new Button(5, 5+4*bheight, bwidth, bheight, 6, orange);
   Button purpleB = new Button(5, 5+5*bheight, bwidth, bheight, 7, purple);
   Button grayB = new Button(5, 5+6*bheight, bwidth, bheight, 8, gray);
-  allButtons = new Button[] {redB, greenB, blueB, yellowB, orangeB, purpleB, grayB}; 
-  currentFillColor = red;
+  Button eraserB = new Button(5, 5+7*bheight, bwidth, bheight, 9, transparent);
+  allButtons = new Button[] {redB, greenB, blueB, yellowB, orangeB, purpleB, grayB, eraserB}; 
+  currentFillColor = blue;
   currentStrokeColor = transparent;
   
   
@@ -143,7 +153,7 @@ void setup()
   // create cursor for left hand
   leftC = new Cursor(cursorW, cursorH);
 
-  background(255);
+  //background(255);
   
   // start a new kinect object
   kinect = new SimpleOpenNI(this);
@@ -163,6 +173,8 @@ void setup()
   size(kinect.depthWidth(), kinect.depthHeight());
   layer1 = createGraphics(cursorW, cursorH);
   
+  /*********YANOS**************/
+  canvas.endDraw();  
   
 } // void setup()
 
@@ -171,8 +183,17 @@ void setup()
  head if confidence of tracking is above threshold
  ----------------------------------------------------------------*/
 void draw() { 
-  //******************
-
+  //*******YANOS***********
+  background(255);
+  noStroke();
+  for (int i=0; i<10; i++) {
+        fill(i*25);
+        rect(i*width/10,0,width/10,height);
+      }
+  image(canvas,0,0);
+  //********YANOS**********
+  
+  
   // update the camera
   kinect.update();
   // get Kinect data
@@ -218,20 +239,30 @@ void draw() {
         // drawSkeleton(userID[i]);
         
         //Paint Cursors
-        leftC.paintCursor(leftHandPos, white, black);
-        brush.paintCursor(rightHandPos, currentFillColor, currentStrokeColor);
         
+        //leftC.eraseFunction(leftHandPos, canvas); // if you want to have left hand = eraser
+        leftC.paintCursor2(leftHandPos, transparent, black);
+        //brush.paintCursor(rightHandPos, currentFillColor, currentStrokeColor);
+        brush.paintCursor(rightHandPos, currentFillColor, currentStrokeColor, canvas);
 
+        
+        
         int buttonNumber = checkButton(leftHandPos);
         if (buttonNumber <= allColors.length) {          
           changeFillColor(buttonNumber);
-        }        
+        } 
+        if (buttonNumber == allButtons.length+1){
+          brush.eraseFunction(rightHandPos,canvas);
+        }       
+        
         
         
       } //if(confidence > confidenceLevel)
     } //if(kinect.isTrackingSkeleton(userID[i]))
   } //for(int i=0;i<userID.length;i++)
 } // void draw()
+
+
 
 /*---------------------------------------------------------------------------------------
  Checks if pos in parameters is over any button. Returns the id of the button, else 1000
@@ -251,8 +282,8 @@ Gesture Recognition
 
 //TODO
 // Check if left hand is horizontal. This can be one gesture in order to start/stop painting/ 
-boolean checkLeftArm(PVector leftHPos, PVector leftElbowPos, PVector leftShoulderPos) {
-}
+//boolean checkLeftArm(PVector leftHPos, PVector leftElbowPos, PVector leftShoulderPos) {
+//}
 
 
 /*---------------------------------------------------------------
@@ -346,4 +377,18 @@ void onLostUser(SimpleOpenNI curContext, int userId) {
  ----------------------------------------------------------------*/
 void onVisibleUser(SimpleOpenNI curContext, int userId) {
 } //void onVisibleUser(SimpleOpenNI curContext, int userId)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
