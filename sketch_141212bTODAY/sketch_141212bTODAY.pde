@@ -59,7 +59,7 @@ float confidence;
 // vector of tracked head for confidence checking
 PVector confidenceVector = new PVector();
 
-//*****************************************
+// vector of tracked hand positions (use .x, .y for coordinates)
 PVector leftHandPos = new PVector();
 PVector rightHandPos = new PVector();
 
@@ -126,13 +126,11 @@ PGraphics layer1;
  ----------------------------------------------------------------*/
 void setup()
 { 
-  //*************YANOS****************** 
   size(800,800);
   smooth();
   canvas = createGraphics(width,height,JAVA2D);
   canvas.beginDraw();
   canvas.smooth();
-  //****************YANOS***************
   
   //b1 = createGraphics(bwidth, bheight);
   Button redB = new Button(5,5, bwidth, bheight, 2, red);
@@ -153,7 +151,6 @@ void setup()
   // create cursor for left hand
   leftC = new Cursor(cursorW, cursorH);
 
-  //background(255);
   
   // start a new kinect object
   kinect = new SimpleOpenNI(this);
@@ -173,7 +170,6 @@ void setup()
   size(kinect.depthWidth(), kinect.depthHeight());
   layer1 = createGraphics(cursorW, cursorH);
   
-  /*********YANOS**************/
   canvas.endDraw();  
   
 } // void setup()
@@ -183,7 +179,6 @@ void setup()
  head if confidence of tracking is above threshold
  ----------------------------------------------------------------*/
 void draw() { 
-  //*******YANOS***********
   background(255);
   noStroke();
   for (int i=0; i<10; i++) {
@@ -191,7 +186,6 @@ void draw() {
         rect(i*width/10,0,width/10,height);
       }
   image(canvas,0,0);
-  //********YANOS**********
   
   
   // update the camera
