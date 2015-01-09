@@ -52,7 +52,6 @@ void paintButton(){
    image(g,posx,posy);   
 }
 
-
 }
 
 

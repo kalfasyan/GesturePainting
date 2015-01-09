@@ -45,6 +45,9 @@ color[] userColor = new color[] {
   color(255, 255, 0), color(255, 0, 255), color(0, 255, 255)
 };
 
+int windowWidth = 800;
+int windowHeight = 800;
+
 // postion of head to draw circle
 PVector headPosition = new PVector();
 // turn headPosition into scalar form
@@ -79,13 +82,19 @@ Button orangeB;
 Button purpleB;
 Button grayB;
 Button eraserB;
+Button sizeB;
 Button[] allButtons;
+
 //position of first button
-int b1x = 5;
-int b1y = 5;
+int blx = int(windowWidth * 0.08);
+int bly = int(windowHeight * 0.08);
+
+//button spacing
+int bspace = 4;
+
 //button size
-int bwidth = 100;
-int bheight = 50;
+int bwidth = 40;
+int bheight = 40;
 //brush size
 int brushW = 20;
 int brushH = 20;
@@ -126,22 +135,23 @@ PGraphics layer1;
  ----------------------------------------------------------------*/
 void setup()
 { 
-  size(800,800);
+  size(windowWidth,windowHeight);
   smooth();
   canvas = createGraphics(width,height,JAVA2D);
   canvas.beginDraw();
   canvas.smooth();
   
   //b1 = createGraphics(bwidth, bheight);
-  Button redB = new Button(5,5, bwidth, bheight, 2, red);
-  Button greenB = new Button(5, 5+bheight, bwidth, bheight, 3, green);
-  Button blueB = new Button(5, 5+2*bheight, bwidth, bheight, 4, blue);
-  Button yellowB = new Button(5, 5+3*bheight, bwidth, bheight, 5, yellow);
-  Button orangeB = new Button(5, 5+4*bheight, bwidth, bheight, 6, orange);
-  Button purpleB = new Button(5, 5+5*bheight, bwidth, bheight, 7, purple);
-  Button grayB = new Button(5, 5+6*bheight, bwidth, bheight, 8, gray);
-  Button eraserB = new Button(5, 5+7*bheight, bwidth, bheight, 9, transparent);
-  allButtons = new Button[] {redB, greenB, blueB, yellowB, orangeB, purpleB, grayB, eraserB}; 
+  Button redB = new Button(blx,bly, bwidth, bheight, 2, red);
+  Button greenB = new Button(blx+bwidth+bspace, int(bly-0.75*bheight), bwidth, bheight, 3, green);
+  Button blueB = new Button(blx+2*(bwidth+bspace),  int(bly-1.5*0.75*bheight), bwidth, bheight, 4, blue);
+  Button yellowB = new Button(blx+3*(bwidth+bspace), int(bly-1.75*0.75*bheight), bwidth, bheight, 5, yellow);
+  Button orangeB = new Button(int(blx-0.75*bwidth), bly+bheight+bspace, bwidth, bheight, 6, orange);
+  Button purpleB = new Button(int(blx-1.5*0.75*bwidth), blx+2*(bheight+bspace), bwidth, bheight, 7, purple);
+  Button grayB = new Button(int(blx-1.75*0.75*bwidth), blx+3*(bheight+bspace), bwidth, bheight, 8, gray);
+  Button sizeB = new Button(int(blx-1.75*0.75*bwidth), blx+4*(bheight+2*bspace), bwidth, bheight, 9, white);
+  Button eraserB = new Button(int(blx-1.75*0.75*bwidth), blx+5*(bheight+2*bspace), bwidth, bheight, 10, transparent);
+  allButtons = new Button[] {redB, greenB, blueB, yellowB, orangeB, purpleB, grayB, sizeB, eraserB}; 
   currentFillColor = blue;
   currentStrokeColor = transparent;
   
@@ -183,11 +193,10 @@ void draw() {
   noStroke();
   // In this 'for loop' we create the canvas color (now grey striped vertical lines)
   for (int i=0; i<10; i++) {
-        fill(i*25);
+        fill(i*25+25);
         rect(i*width/10,0,width/10,height);
       }
   image(canvas,0,0);
-  
   
   // update the camera
   kinect.update();
@@ -239,16 +248,19 @@ void draw() {
         leftC.paintCursor2(leftHandPos, transparent, black);
         //brush.paintCursor(rightHandPos, currentFillColor, currentStrokeColor);
         brush.paintCursor(rightHandPos, currentFillColor, currentStrokeColor, canvas);
+        brush.paintCursor2(rightHandPos, transparent, black);
 
         
         
         int buttonNumber = checkButton(leftHandPos);
-        if (buttonNumber <= allColors.length) {          
+        if (buttonNumber < allColors.length) {          
           changeFillColor(buttonNumber);
         } 
         if (buttonNumber == allButtons.length+1){
           brush.eraseFunction(rightHandPos,canvas);
-        }       
+        }
+        if (buttonNumber == allButtons.length){
+        }      
         
         
         
