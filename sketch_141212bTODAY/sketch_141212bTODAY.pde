@@ -6,7 +6,7 @@ OK Implement left hand - push/hover button property
 OK Don't change color only when cursor is hovering, once it touches the button it changes and stays that way.
 *  Left hand cursor has to be drawn as a cursor, not painting
 OK Menu on the left: 6-color palette - each color is picked on hover of the left hand.
-OK  Maybe implement the same thing for cursor input, for debugging reasons. --> PVector mouse added. 
+OK  Maybeimplement the same thing for cursor input, for debugging reasons. --> PVector mouse added. 
 *  Try at least one gesture --> Implement checkLeftArm();
 
 Basic Tasks:
@@ -181,6 +181,7 @@ void setup()
 void draw() { 
   background(255);
   noStroke();
+  // In this 'for loop' we create the canvas color (now grey striped vertical lines)
   for (int i=0; i<10; i++) {
         fill(i*25);
         rect(i*width/10,0,width/10,height);
