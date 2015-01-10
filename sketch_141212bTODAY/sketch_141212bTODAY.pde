@@ -86,8 +86,8 @@ Button sizeB;
 Button[] allButtons;
 
 //position of first button
-int blx = int(windowWidth * 0.08);
-int bly = int(windowHeight * 0.08);
+int blx = int(windowWidth * 0.06);
+int bly = int(windowHeight * 0.06);
 
 //button spacing
 int bspace = 4;
@@ -107,6 +107,9 @@ int big = 40;
 int small = 20;
 
 boolean changedSize = false;
+
+boolean paintOn = false;
+boolean changedPaintingStatus = false;
 
 /** Some Colors to play with **/
 color red = color(230, 25, 44);
@@ -149,14 +152,14 @@ void setup()
   
   //b1 = createGraphics(bwidth, bheight);
   Button redB = new Button(blx,bly, bwidth, bheight, 2, red);
-  Button greenB = new Button(blx+bwidth+bspace, int(bly-0.75*bheight), bwidth, bheight, 3, green);
-  Button blueB = new Button(blx+2*(bwidth+bspace),  int(bly-1.5*0.75*bheight), bwidth, bheight, 4, blue);
-  Button yellowB = new Button(blx+3*(bwidth+bspace), int(bly-1.75*0.75*bheight), bwidth, bheight, 5, yellow);
-  Button orangeB = new Button(int(blx-0.75*bwidth), bly+bheight+bspace, bwidth, bheight, 6, orange);
-  Button purpleB = new Button(int(blx-1.5*0.75*bwidth), blx+2*(bheight+bspace), bwidth, bheight, 7, purple);
-  Button grayB = new Button(int(blx-1.75*0.75*bwidth), blx+3*(bheight+bspace), bwidth, bheight, 8, gray);
-  Button sizeB = new Button(int(blx-1.75*0.75*bwidth), blx+4*(bheight+2*bspace), bwidth, bheight, 9, white);
-  Button eraserB = new Button(int(blx-1.75*0.75*bwidth), blx+5*(bheight+2*bspace), bwidth, bheight, 10, transparent);
+  Button greenB = new Button(blx+bwidth+bspace, int(bly-0.5*bheight), bwidth, bheight, 3, green);
+  Button blueB = new Button(blx+2*(bwidth+bspace),  int(bly-1.5*0.5*bheight), bwidth, bheight, 4, blue);
+  Button yellowB = new Button(blx+3*(bwidth+bspace), int(bly-1.75*0.5*bheight), bwidth, bheight, 5, yellow);
+  Button orangeB = new Button(int(blx-0.5*bwidth), bly+bheight+bspace, bwidth, bheight, 6, orange);
+  Button purpleB = new Button(int(blx-1.5*0.5*bwidth), bly+2*(bheight+bspace), bwidth, bheight, 7, purple);
+  Button grayB = new Button(int(blx-1.75*0.5*bwidth), bly+3*(bheight+bspace), bwidth, bheight, 8, gray);
+  Button sizeB = new Button(int(blx-1.75*0.5*bwidth), bly+4*(bheight+2*bspace), bwidth, bheight, 9, white);
+  Button eraserB = new Button(int(blx-1.75*0.5*bwidth), bly+5*(bheight+2*bspace), bwidth, bheight, 10, transparent);
   allButtons = new Button[] {redB, greenB, blueB, yellowB, orangeB, purpleB, grayB, sizeB, eraserB}; 
   currentFillColor = blue;
   currentStrokeColor = transparent;
@@ -246,17 +249,31 @@ void draw() {
         
        
         // draw the rest of the body
-        // drawSkeleton(userID[i]);
+        drawSkeleton(userID[i]);
+        
+        /* Check if the user placed their hand in front of (or theoretically also
+        behind) their head. If they have, switch painting on/off
+        */
+        if (checkHeadTouch(headPosition, leftHandPos) && !changedPaintingStatus) {
+          if (paintOn) {
+            paintOn = false;
+          } else {
+            paintOn = true;
+          }
+          changedPaintingStatus = true;
+        } else {
+        changedPaintingStatus = false;
+        }
         
         //Paint Cursors
         
         //leftC.eraseFunction(leftHandPos, canvas); // if you want to have left hand = eraser
+        brush.paintCursor2(rightHandPos, transparent, black);
         leftC.paintCursor2(leftHandPos, transparent, black);
         //brush.paintCursor(rightHandPos, currentFillColor, currentStrokeColor);
-        brush.paintCursor(rightHandPos, currentFillColor, currentStrokeColor, canvas);
-        brush.paintCursor2(rightHandPos, transparent, black);
-
-        
+        if (paintOn) {
+          brush.paintCursor(rightHandPos, currentFillColor, currentStrokeColor, canvas);
+        }
         
         int buttonNumber = checkButton(leftHandPos);
         if (buttonNumber <= 8) {          
@@ -311,6 +328,14 @@ Gesture Recognition
 //boolean checkLeftArm(PVector leftHPos, PVector leftElbowPos, PVector leftShoulderPos) {
 //}
 
+boolean checkHeadTouch(PVector headPos, PVector handPos) {
+  if (handPos.x >= (headPos.x-25) && handPos.x <= (headPos.x+25)) {
+    if (handPos.y >= (headPos.y-25) && handPos.y <= (headPos.y+25)) {
+        return true;
+    }
+  }
+  return false;
+}
 
 /*---------------------------------------------------------------
 Change functions. E.g. changeFillColor -> changes the color of the brush 
