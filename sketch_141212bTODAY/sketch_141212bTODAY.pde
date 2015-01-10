@@ -98,9 +98,15 @@ int bheight = 40;
 //brush size
 int brushW = 20;
 int brushH = 20;
-//cursor size
+//original cursor size
 int cursorW = 20;
 int cursorH = 20;
+
+//Cursor sizes
+int big = 40;
+int small = 20;
+
+boolean changedSize = false;
 
 /** Some Colors to play with **/
 color red = color(230, 25, 44);
@@ -108,7 +114,7 @@ color green = color(127, 255, 0);
 color blue = color(52,152,219);
 color yellow = color(232, 222, 42);
 color orange = color(255, 118, 25);
-color purple = color(156, 138, 165); 
+color purple = color(156, 0, 165); 
 color gray = color(127, 140, 141);
 color white = color(255, 255, 255);
 color black = color(0, 0, 0);
@@ -253,14 +259,27 @@ void draw() {
         
         
         int buttonNumber = checkButton(leftHandPos);
-        if (buttonNumber < allColors.length) {          
+        if (buttonNumber <= 8) {          
           changeFillColor(buttonNumber);
-        } 
-        if (buttonNumber == allButtons.length+1){
+        }
+        //If touching size button, switch size
+        //Checks changedSize to prevent size from rapidly changing while the
+        //user hovers over the button. 
+        if (buttonNumber == 9 && !changedSize){
+          if (brush.getWidth() < 30) {
+            brush.setSize(big, big);
+          } else {
+            brush.setSize(small, small);
+          }
+          changedSize = true;
+        }  
+        if (buttonNumber == 10){
           brush.eraseFunction(rightHandPos,canvas);
         }
-        if (buttonNumber == allButtons.length){
-        }      
+        // No button is touched, reset brush size boolean
+        if (buttonNumber == 1000) {
+          changedSize = false;
+        }    
         
         
         
