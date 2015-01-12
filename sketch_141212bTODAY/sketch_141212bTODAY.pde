@@ -86,6 +86,7 @@ Button sizeB;
 Button[] allButtons;
 
 PImage eraser;
+PImage brush_size;
 
 //position of first button
 int blx = int(windowWidth * 0.06);
@@ -113,7 +114,9 @@ PImage left_hand;
 PImage right_hand;
 
 boolean changedSize = false;
+boolean toggledErase = false;
 
+boolean eraseOn = false;
 boolean paintOn = false;
 boolean changedPaintingStatus = false;
 
@@ -157,6 +160,7 @@ void setup()
   canvas.smooth();
   
   eraser = loadImage("eraser.png");
+  brush_size = loadImage("brush_size.png");
   
   //b1 = createGraphics(bwidth, bheight);
   Button redB = new Button(blx,bly, bwidth, bheight, 2, red);
@@ -166,7 +170,7 @@ void setup()
   Button orangeB = new Button(int(blx-0.5*bwidth), bly+bheight+bspace, bwidth, bheight, 6, orange);
   Button purpleB = new Button(int(blx-1.5*0.5*bwidth), bly+2*(bheight+bspace), bwidth, bheight, 7, purple);
   Button grayB = new Button(int(blx-1.75*0.5*bwidth), bly+3*(bheight+bspace), bwidth, bheight, 8, gray);
-  Button sizeB = new Button(int(blx-1.75*0.5*bwidth), bly+4*(bheight+2*bspace), bwidth, bheight, 9, white);
+  Button sizeB = new Button(int(blx-1.75*0.5*bwidth), bly+4*(bheight+2*bspace), bwidth, bheight, 9, brush_size);
   Button eraserB = new Button(int(blx-1.75*0.5*bwidth), bly+5*(bheight+2*bspace), bwidth, bheight, 10, eraser);
   allButtons = new Button[] {redB, greenB, blueB, yellowB, orangeB, purpleB, grayB, sizeB, eraserB}; 
   currentFillColor = blue;
@@ -261,6 +265,7 @@ void draw() {
         
        
         // draw the rest of the body
+        fill(255);
         drawSkeleton(userID[i]);
         
         /* Check if the user placed their hand in front of (or theoretically also
@@ -284,7 +289,11 @@ void draw() {
         leftC.paintImageCursor(leftHandPos, left_hand);
         //brush.paintCursor(rightHandPos, currentFillColor, currentStrokeColor);
         if (paintOn) {
-          brush.paintCursor(rightHandPos, currentFillColor, currentStrokeColor, canvas);
+          if (eraseOn) {
+            brush.eraseFunction(rightHandPos,canvas);
+          } else {
+            brush.paintCursor(rightHandPos, currentFillColor, currentStrokeColor, canvas);
+          }
         }
         
         int buttonNumber = checkButton(leftHandPos);
@@ -302,12 +311,18 @@ void draw() {
           }
           changedSize = true;
         }  
-        if (buttonNumber == 10){
-          brush.eraseFunction(rightHandPos,canvas);
+        if (buttonNumber == 10 && !toggledErase){
+          if (eraseOn) {
+            eraseOn = false;
+          } else {
+            eraseOn = true;
+          }
+          toggledErase = true;
         }
         // No button is touched, reset brush size boolean
         if (buttonNumber == 1000) {
           changedSize = false;
+          toggledErase = false;
         }    
         
         
@@ -367,9 +382,10 @@ void changeStrokeColor(color c) {
  Paint Buttons: paints all buttons. The buttons must be elements of the array allButtons[]
  ------------------------------------------------------------------------------------------*/
 void paintButtons() {
-  for (int i=0; i<allButtons.length-1; i++) {
+  for (int i=0; i<allButtons.length-2; i++) {
     allButtons[i].paintButton();
   }
+  allButtons[allButtons.length-2].paintImageButton();
   allButtons[allButtons.length-1].paintImageButton();
 }
 
