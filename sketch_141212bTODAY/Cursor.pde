@@ -50,7 +50,14 @@ class Cursor {
     g.beginDraw();
     g.noStroke();
     //g.fill(255,0,0);
-    g.ellipse(pos.x,pos.y, 20,20);
+    g.ellipse(pos.x, pos.y, 20,20);
+    g.endDraw();
+  }
+  
+  // This paintCursor function DOES NOT LEAVE A TRACE and paints an image instead of a shape
+  void paintImageCursor(PVector pos, PImage img){
+    g.beginDraw();
+    image(img, pos.x, pos.y);
     g.endDraw();
   }
   

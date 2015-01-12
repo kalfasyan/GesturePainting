@@ -106,6 +106,10 @@ int cursorH = 20;
 int big = 40;
 int small = 20;
 
+//Curson icons
+PImage left_hand;
+PImage right_hand;
+
 boolean changedSize = false;
 
 boolean paintOn = false;
@@ -170,6 +174,8 @@ void setup()
   // create cursor for left hand
   leftC = new Cursor(cursorW, cursorH);
 
+  left_hand = loadImage("left_hand.png");
+  right_hand = loadImage("right_hand.png");
   
   // start a new kinect object
   kinect = new SimpleOpenNI(this);
@@ -268,8 +274,8 @@ void draw() {
         //Paint Cursors
         
         //leftC.eraseFunction(leftHandPos, canvas); // if you want to have left hand = eraser
-        brush.paintCursor2(rightHandPos, transparent, black);
-        leftC.paintCursor2(leftHandPos, transparent, black);
+        brush.paintCursor2(rightHandPos, right_hand);
+        leftC.paintCursor2(leftHandPos, left_hand);
         //brush.paintCursor(rightHandPos, currentFillColor, currentStrokeColor);
         if (paintOn) {
           brush.paintCursor(rightHandPos, currentFillColor, currentStrokeColor, canvas);
