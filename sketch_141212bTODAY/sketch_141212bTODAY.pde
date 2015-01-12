@@ -85,6 +85,8 @@ Button eraserB;
 Button sizeB;
 Button[] allButtons;
 
+PImage eraser;
+
 //position of first button
 int blx = int(windowWidth * 0.06);
 int bly = int(windowHeight * 0.06);
@@ -154,6 +156,8 @@ void setup()
   canvas.beginDraw();
   canvas.smooth();
   
+  eraser = loadImage("eraser.png");
+  
   //b1 = createGraphics(bwidth, bheight);
   Button redB = new Button(blx,bly, bwidth, bheight, 2, red);
   Button greenB = new Button(blx+bwidth+bspace, int(bly-0.5*bheight), bwidth, bheight, 3, green);
@@ -163,7 +167,7 @@ void setup()
   Button purpleB = new Button(int(blx-1.5*0.5*bwidth), bly+2*(bheight+bspace), bwidth, bheight, 7, purple);
   Button grayB = new Button(int(blx-1.75*0.5*bwidth), bly+3*(bheight+bspace), bwidth, bheight, 8, gray);
   Button sizeB = new Button(int(blx-1.75*0.5*bwidth), bly+4*(bheight+2*bspace), bwidth, bheight, 9, white);
-  Button eraserB = new Button(int(blx-1.75*0.5*bwidth), bly+5*(bheight+2*bspace), bwidth, bheight, 10, transparent);
+  Button eraserB = new Button(int(blx-1.75*0.5*bwidth), bly+5*(bheight+2*bspace), bwidth, bheight, 10, eraser);
   allButtons = new Button[] {redB, greenB, blueB, yellowB, orangeB, purpleB, grayB, sizeB, eraserB}; 
   currentFillColor = blue;
   currentStrokeColor = transparent;
@@ -207,10 +211,12 @@ void draw() {
   background(255);
   noStroke();
   // In this 'for loop' we create the canvas color (now grey striped vertical lines)
-  for (int i=0; i<10; i++) {
+/*  for (int i=0; i<10; i++) {
         fill(i*25+25);
         rect(i*width/10,0,width/10,height);
-      }
+      }*/
+      fill(25);
+      rect(0,0,width,height);
   image(canvas,0,0);
   
   // update the camera
@@ -274,8 +280,8 @@ void draw() {
         //Paint Cursors
         
         //leftC.eraseFunction(leftHandPos, canvas); // if you want to have left hand = eraser
-        brush.paintCursor2(rightHandPos, right_hand);
-        leftC.paintCursor2(leftHandPos, left_hand);
+        brush.paintImageCursor(rightHandPos, right_hand);
+        leftC.paintImageCursor(leftHandPos, left_hand);
         //brush.paintCursor(rightHandPos, currentFillColor, currentStrokeColor);
         if (paintOn) {
           brush.paintCursor(rightHandPos, currentFillColor, currentStrokeColor, canvas);
@@ -361,9 +367,10 @@ void changeStrokeColor(color c) {
  Paint Buttons: paints all buttons. The buttons must be elements of the array allButtons[]
  ------------------------------------------------------------------------------------------*/
 void paintButtons() {
-  for (int i=0; i<allButtons.length; i++) {
+  for (int i=0; i<allButtons.length-1; i++) {
     allButtons[i].paintButton();
   }
+  allButtons[allButtons.length-1].paintImageButton();
 }
 
 /*---------------------------------------------------------------
