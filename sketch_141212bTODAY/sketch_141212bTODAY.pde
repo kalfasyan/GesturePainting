@@ -1,27 +1,27 @@
 /*---------------------------------------------------------------
-TASKS //add every task to be done here
-
-For Milestone:
-OK Implement left hand - push/hover button property
-OK Don't change color only when cursor is hovering, once it touches the button it changes and stays that way.
-*  Left hand cursor has to be drawn as a cursor, not painting
-OK Menu on the left: 6-color palette - each color is picked on hover of the left hand.
-OK  Maybeimplement the same thing for cursor input, for debugging reasons. --> PVector mouse added. 
-*  Try at least one gesture --> Implement checkLeftArm();
-
-Basic Tasks:
-* Hover selection is a bit difficult, maybe add a gesture for selecting? (simulating a mouse click)
-* Start / Stop Drawing : !!! RECOGNIZE GESTURE OF LEFT HAND FOR THAT
-* Implement background : Show the camera input instead of a blank paper
-* Basic Menu on the left:
-  * Tool 1 - Brush stroke button(light, normal, bold)
-  * Tool 2 - Eraser button
-  * Tool 3 - Color Picker button(first choose between 6 colors)
-  * Tool 4 - What else?
-
-Additional Tasks: (Add what you want here, some cool stuff, everyone can pick one or more and implement it)
-* Transparency
-* Add tracking of more users
+ TASKS //add every task to be done here
+ 
+ For Milestone:
+ OK Implement left hand - push/hover button property
+ OK Don't change color only when cursor is hovering, once it touches the button it changes and stays that way.
+ *  Left hand cursor has to be drawn as a cursor, not painting
+ OK Menu on the left: 6-color palette - each color is picked on hover of the left hand.
+ OK  Maybeimplement the same thing for cursor input, for debugging reasons. --> PVector mouse added. 
+ *  Try at least one gesture --> Implement checkLeftArm();
+ 
+ Basic Tasks:
+ * Hover selection is a bit difficult, maybe add a gesture for selecting? (simulating a mouse click)
+ * Start / Stop Drawing : !!! RECOGNIZE GESTURE OF LEFT HAND FOR THAT
+ * Implement background : Show the camera input instead of a blank paper
+ * Basic Menu on the left:
+ * Tool 1 - Brush stroke button(light, normal, bold)
+ * Tool 2 - Eraser button
+ * Tool 3 - Color Picker button(first choose between 6 colors)
+ * Tool 4 - What else?
+ 
+ Additional Tasks: (Add what you want here, some cool stuff, everyone can pick one or more and implement it)
+ * Transparency
+ * Add tracking of more users
  ----------------------------------------------------------------*/
 
 /*---------------------------------------------------------------
@@ -73,7 +73,11 @@ float distanceScalarLHand;
 float leftHandSize = 50;
 float rightHandSize = 50;
 PGraphics canvas;
-//All Buttons
+PGraphics status;
+
+/*---------------  
+All Buttons
+----------------*/
 Button redB;
 Button greenB;
 Button blueB;
@@ -83,6 +87,7 @@ Button purpleB;
 Button grayB;
 Button eraserB;
 Button sizeB;
+Button saveB;
 Button[] allButtons;
 
 PImage eraser;
@@ -112,6 +117,9 @@ int small = 20;
 //Curson icons
 PImage left_hand;
 PImage right_hand;
+PImage stop;
+PImage play;
+PImage save;
 
 boolean changedSize = false;
 boolean toggledErase = false;
@@ -119,20 +127,33 @@ boolean toggledErase = false;
 boolean eraseOn = false;
 boolean paintOn = false;
 boolean changedPaintingStatus = false;
+boolean handOverHead = false;
+
+//wait variables
+boolean waitingOn = false;
+int bigWaiting = 50; //if default frame rate is 60fps
+int smallWaiting = 20;
+int timer = 0;
+int changeTimer = 20; 
+PGraphics progressBar;
+
+int buttonNumber;
 
 /** Some Colors to play with **/
 color red = color(230, 25, 44);
 color green = color(127, 255, 0);
-color blue = color(52,152,219);
+color blue = color(52, 152, 219);
 color yellow = color(232, 222, 42);
 color orange = color(255, 118, 25);
 color purple = color(156, 0, 165); 
 color gray = color(127, 140, 141);
 color white = color(255, 255, 255);
 color black = color(0, 0, 0);
-color transparent = color (255,0,0,0);
+color transparent = color (255, 0, 0, 0);
 
-int[] allColors = new color[] {black, white, red, green, blue, yellow, orange, purple, gray, transparent};  // color ids are respectively 0, 1, 2, ...., 8
+int[] allColors = new color[] {
+  black, white, red, green, blue, yellow, orange, purple, gray, transparent
+};  // color ids are respectively 0, 1, 2, ...., 8
 
 // value for the fill/stroke color used by the brush. Change this value to change the brush fill/stroke color
 color currentFillColor;
@@ -145,7 +166,9 @@ color currentStrokeColor; //not used for the moment
 
 //Declare cursors
 Cursor brush, leftC;
+
 PGraphics layer1;
+
 
 /*---------------------------------------------------------------
  Starts new kinect object and enables skeleton tracking.
@@ -153,38 +176,52 @@ PGraphics layer1;
  ----------------------------------------------------------------*/
 void setup()
 { 
-  size(windowWidth,windowHeight);
+  size(windowWidth, windowHeight);
   smooth();
-  canvas = createGraphics(width,height,JAVA2D);
+  canvas = createGraphics(width, height, JAVA2D);
   canvas.beginDraw();
   canvas.smooth();
   
+  status = createGraphics(50, 50);
+
+  //Load Images
+  left_hand = loadImage("left_hand.png");
+  right_hand = loadImage("right_hand.png");
+  play = loadImage("play.png");
+  stop = loadImage("stop.png");
+  //save = loadImage("save.png");
   eraser = loadImage("eraser.png");
   brush_size = loadImage("brush_size.png");
-  
+
   //b1 = createGraphics(bwidth, bheight);
-  Button redB = new Button(blx,bly, bwidth, bheight, 2, red);
+  Button redB = new Button(blx, bly, bwidth, bheight, 2, red);
   Button greenB = new Button(blx+bwidth+bspace, int(bly-0.5*bheight), bwidth, bheight, 3, green);
-  Button blueB = new Button(blx+2*(bwidth+bspace),  int(bly-1.5*0.5*bheight), bwidth, bheight, 4, blue);
+  Button blueB = new Button(blx+2*(bwidth+bspace), int(bly-1.5*0.5*bheight), bwidth, bheight, 4, blue);
   Button yellowB = new Button(blx+3*(bwidth+bspace), int(bly-1.75*0.5*bheight), bwidth, bheight, 5, yellow);
   Button orangeB = new Button(int(blx-0.5*bwidth), bly+bheight+bspace, bwidth, bheight, 6, orange);
   Button purpleB = new Button(int(blx-1.5*0.5*bwidth), bly+2*(bheight+bspace), bwidth, bheight, 7, purple);
   Button grayB = new Button(int(blx-1.75*0.5*bwidth), bly+3*(bheight+bspace), bwidth, bheight, 8, gray);
   Button sizeB = new Button(int(blx-1.75*0.5*bwidth), bly+4*(bheight+2*bspace), bwidth, bheight, 9, brush_size);
   Button eraserB = new Button(int(blx-1.75*0.5*bwidth), bly+5*(bheight+2*bspace), bwidth, bheight, 10, eraser);
-  allButtons = new Button[] {redB, greenB, blueB, yellowB, orangeB, purpleB, grayB, sizeB, eraserB}; 
+  //Button saveB = new Button(int(blx-1.75*0.5*bwidth), bly+6*(bheight+2*bspace), bwidth, bheight, 11, save);
+  //Button saveB = new Button(int(blx-1.75*0.5*bwidth), bly+5*(bheight+2*bspace), bwidth, bheight, 10, save);
+  allButtons = new Button[] {
+    redB, greenB, blueB, yellowB, orangeB, purpleB, grayB, sizeB, eraserB
+  }; 
   currentFillColor = blue;
   currentStrokeColor = transparent;
-  
-  
+
+
   // create brush
   brush = new Cursor(brushW, brushH);
   // create cursor for left hand
   leftC = new Cursor(cursorW, cursorH);
 
-  left_hand = loadImage("left_hand.png");
-  right_hand = loadImage("right_hand.png");
   
+  
+  //create progress bar
+  progressBar = createGraphics(100, 40);
+
   // start a new kinect object
   kinect = new SimpleOpenNI(this);
 
@@ -202,9 +239,7 @@ void setup()
   // create a window the size of the depth information
   size(kinect.depthWidth(), kinect.depthHeight());
   layer1 = createGraphics(cursorW, cursorH);
-  
-  canvas.endDraw();  
-  
+  canvas.endDraw();
 } // void setup()
 
 /*---------------------------------------------------------------
@@ -215,40 +250,44 @@ void draw() {
   background(255);
   noStroke();
   // In this 'for loop' we create the canvas color (now grey striped vertical lines)
-/*  for (int i=0; i<10; i++) {
-        fill(i*25+25);
-        rect(i*width/10,0,width/10,height);
-      }*/
-      fill(25);
-      rect(0,0,width,height);
-  image(canvas,0,0);
-  
+  /*  for (int i=0; i<10; i++) {
+   fill(i*25+25);
+   rect(i*width/10,0,width/10,height);
+   }*/
+  fill(25);
+  rect(0, 0, width, height);
+  image(canvas, 0, 0);
+
   // update the camera
   kinect.update();
   // get Kinect data
   kinectDepth = kinect.depthImage();
-  
+
   // draw depth image at coordinates (0,0)
   // INSTEAD OF KINETDEPTH TRY SOMETHING ELSE
   //image(kinectDepth,0,0);
-  
+
   // get all user IDs of tracked users
   userID = kinect.getUsers();
-  
+
   // paint buttons here (independent of user id's)
   paintButtons(); 
+  
+  //paint status here
+  paintStatus();
 
   // loop through each user to see if tracking
   // but if we care only for the first user then we shouldn't being doing that. 
   // Or maybe care only for one user, not caring about his id (e.g. the first minute it's user1, then user2 pops in and takes control)
   // In any case, this needs fixing --> BUG when detects 2nd user.  
   for (int i=0; i<userID.length; i++)
+//  //  for (int i=0; i<1; i++) //only track first user
   {
-    
+
     // if Kinect is tracking certain user then get joint vectors
     if (kinect.isTrackingSkeleton(userID[i]))
     {     
-      
+
       // get confidence level that Kinect is tracking head
       confidence = kinect.getJointPositionSkeleton(userID[i], 
       SimpleOpenNI.SKEL_HEAD, confidenceVector);
@@ -262,74 +301,116 @@ void draw() {
         // get right hand position
         kinect.getJointPositionSkeleton(userID[i], SimpleOpenNI.SKEL_RIGHT_HAND, rightHandPos);
         kinect.convertRealWorldToProjective(rightHandPos, rightHandPos);
-        
-       
+
+
         // draw the rest of the body
         fill(255);
         drawSkeleton(userID[i]);
-        
+
         /* Check if the user placed their hand in front of (or theoretically also
-        behind) their head. If they have, switch painting on/off
-        */
-        if (checkHeadTouch(headPosition, leftHandPos) && !changedPaintingStatus) {
-          if (paintOn) {
-            paintOn = false;
-          } else {
-            paintOn = true;
+         behind) their head. If they have, switch painting on/off
+         */
+         
+         
+        if (changeTimer < smallWaiting) {
+          handOverHead = false;
+          buttonNumber = 1000;
+          changeTimer++;
+        } 
+        else { 
+          if (checkHeadTouch(headPosition, leftHandPos)) {
+            handOverHead=true;   
           }
-          changedPaintingStatus = true;
-        } else {
-        changedPaintingStatus = false;
+         buttonNumber = checkButton(leftHandPos); 
         }
         
-        //Paint Cursors
         
+        
+        
+//        if (checkHeadTouch(headPosition, leftHandPos) && !changedPaintingStatus) {
+//          handOverHead = true;
+////          if (paintOn) {
+////            paintOn = false;
+////          } else {
+////            paintOn = true;
+////          }
+////          changedPaintingStatus = true;
+////        } else {
+////          changedPaintingStatus = false;
+//        } else {
+//          handOverHead = false;
+//          changedPaintingStatus = false;          
+//        }
+                
+
+        //Paint Cursors
+
         //leftC.eraseFunction(leftHandPos, canvas); // if you want to have left hand = eraser
         brush.paintImageCursor(rightHandPos, right_hand);
         leftC.paintImageCursor(leftHandPos, left_hand);
         //brush.paintCursor(rightHandPos, currentFillColor, currentStrokeColor);
         if (paintOn) {
           if (eraseOn) {
-            brush.eraseFunction(rightHandPos,canvas);
+            brush.eraseFunction(rightHandPos, canvas);
           } else {
             brush.paintCursor(rightHandPos, currentFillColor, currentStrokeColor, canvas);
           }
         }
+
+
+        // if the waiting is On then we must check if leftHandPos is still indicating the same button for all the waiting time
         
-        int buttonNumber = checkButton(leftHandPos);
-        if (buttonNumber <= 8) {          
-          changeFillColor(buttonNumber);
-        }
-        //If touching size button, switch size
-        //Checks changedSize to prevent size from rapidly changing while the
-        //user hovers over the button. 
-        if (buttonNumber == 9 && !changedSize){
-          if (brush.getWidth() < 30) {
-            brush.setSize(big, big);
-          } else {
-            brush.setSize(small, small);
+        if (waitingOn) {
+
+          int buttonTmp = checkButton(leftHandPos);
+          if (handOverHead){
+            if (timer<bigWaiting) {
+              timer++;
+              dispProgressBar();              
+            }
+            else {
+              togglePaint();
+              timer=0;
+              changeTimer=0;
+              waitingOn = false;
+            }
           }
-          changedSize = true;
-        }  
-        if (buttonNumber == 10 && !toggledErase){
-          if (eraseOn) {
-            eraseOn = false;
+          else if (buttonTmp == buttonNumber) {
+            if (timer<bigWaiting) {
+              timer++;
+              dispProgressBar();  //TODO
+             
+            } else {
+              buttonAction(buttonNumber);
+              timer=0;
+              changeTimer = 0;
+            }           
           } else {
-            eraseOn = true;
+            timer=0;
+            waitingOn = false;
+          }       
+
+        } //if(waitingOn) 
+        else {
+          timer=0;          
+          if (buttonNumber!=1000) {
+            timer = 0;
+            waitingOn = true;
+          } else if (handOverHead){
+            timer = 0;
+            waitingOn = true;  
+          } else {
+            changedSize = false;
+            toggledErase = false;
           }
-          toggledErase = true;
         }
-        // No button is touched, reset brush size boolean
-        if (buttonNumber == 1000) {
-          changedSize = false;
-          toggledErase = false;
-        }    
-        
-        
-        
+        //
       } //if(confidence > confidenceLevel)
     } //if(kinect.isTrackingSkeleton(userID[i]))
   } //for(int i=0;i<userID.length;i++)
+  
+  //smooth out drawing
+  smooth();
 } // void draw()
 
 
@@ -344,11 +425,10 @@ int checkButton(PVector pos) {
     }
   }
   return 1000;
-
 }
 /*----------------------------------------------------------------------------------------
-Gesture Recognition
------------------------------------------------------------------------------------------*/
+ Gesture Recognition
+ -----------------------------------------------------------------------------------------*/
 
 //TODO
 // Check if left hand is horizontal. This can be one gesture in order to start/stop painting/ 
@@ -358,14 +438,50 @@ Gesture Recognition
 boolean checkHeadTouch(PVector headPos, PVector handPos) {
   if (handPos.x >= (headPos.x-25) && handPos.x <= (headPos.x+25)) {
     if (handPos.y >= (headPos.y-25) && handPos.y <= (headPos.y+25)) {
-        return true;
+      return true;
     }
   }
   return false;
 }
 
+/*-----------------------------------------------------------------------
+ Button Action: performs action according to the button selected
+ -------------------------------------------------------------------------*/
+void buttonAction(int bn) {
+  if (bn <= 8) {
+    changeFillColor(buttonNumber);
+  }
+  //If touching size button, switch size
+  //Checks changedSize to prevent size from rapidly changing while the
+  //user hovers over the button. 
+  if (buttonNumber == 9 && !changedSize) {
+    if (brush.getWidth() < 30) {
+      brush.setSize(big, big);
+    } else {
+      brush.setSize(small, small);
+    }
+    changedSize = true;
+  }
+  if (buttonNumber == 10 && !toggledErase) {
+    if (eraseOn) {
+      eraseOn = false;
+    } else {
+      eraseOn = true;
+    }
+    toggledErase = true;
+  }
+  if (buttonNumber == 11) {
+    
+  }
+  // No button is touched, reset brush size boolean
+  if (buttonNumber == 1000) {
+    changedSize = false;
+    toggledErase = false;
+  }
+}
+
 /*---------------------------------------------------------------
-Change functions. E.g. changeFillColor -> changes the color of the brush 
+ Change functions. E.g. changeFillColor -> changes the color of the brush 
  ----------------------------------------------------------------*/
 
 void changeFillColor (int colorID) {
@@ -389,6 +505,57 @@ void paintButtons() {
   allButtons[allButtons.length-1].paintImageButton();
 }
 
+void paintStatus() {
+   status.beginDraw();
+   PImage img;
+   if (paintOn) {
+     tint(127, 255, 0);
+     img = play;
+   }
+   else {
+     tint(230,25,44);
+     img = stop;
+   }
+   status.image(img, 1, 1);   
+   image(img,580,10); 
+   
+   noTint();  
+   g.endDraw();
+   
+   
+   
+}
+
+/*----------------------------------------------------------
+ Display Loading Bar when user selects a tool
+ ------------------------------------------------------------*/
+void dispProgressBar() {
+  progressBar.beginDraw();
+  progressBar.background(25);
+  progressBar.fill(white); 
+  int w = timer*80/bigWaiting;
+  progressBar.rect(10, 10, w, 20, 5);
+  progressBar.stroke(white);
+  strokeWeight(3);
+  progressBar.noFill();
+  progressBar.rect(10,10,80,20,5);
+  
+  progressBar.endDraw();
+  image(progressBar, 20, 440);
+}
+
+
+
+
+void togglePaint() {
+  if (paintOn) {
+    paintOn = false;
+  } else {
+    paintOn = true;
+  }
+  
+}
+
 /*---------------------------------------------------------------
  Draw the skeleton of a tracked user.  Input is userID
  ----------------------------------------------------------------*/
@@ -401,7 +568,7 @@ void drawSkeleton(int userId) {
   // create a distance scalar related to the depth in z dimension
   distanceScalar = (525/headPosition.z);
   // draw the circle at the position of the head with the head size scaled by the distance scalar
-  ellipse(headPosition.x, headPosition.y, distanceScalar*headSize, distanceScalar*headSize); 
+  //ellipse(headPosition.x, headPosition.y, distanceScalar*headSize, distanceScalar*headSize); 
   //draw limb from head to neck
   kinect.drawLimb(userId, SimpleOpenNI.SKEL_HEAD, SimpleOpenNI.SKEL_NECK);
   //draw limb from neck to left shoulder
@@ -457,7 +624,6 @@ void onLostUser(SimpleOpenNI curContext, int userId) {
  ----------------------------------------------------------------*/
 void onVisibleUser(SimpleOpenNI curContext, int userId) {
 } //void onVisibleUser(SimpleOpenNI curContext, int userId)
-
 
 
 
